@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.dragold.plugin"
-version = "1.2.1"
+version = "1.2.4"
 
 repositories {
     // 当前环境访问 Maven Central 会在 HEAD 请求阶段被拒绝，优先使用已验证可访问的镜像
@@ -42,8 +42,8 @@ intellijPlatform {
         version = project.version.toString()
 
         ideaVersion {
-            sinceBuild = "251"
-            untilBuild = "263.*"
+            sinceBuild = "233"   // Android Studio Iguana (2023.2) 及以上均可安装
+            // untilBuild 不设置 = 不限制未来版本，新版 AS 发布后无需更新插件即可使用
         }}
 
     signing {

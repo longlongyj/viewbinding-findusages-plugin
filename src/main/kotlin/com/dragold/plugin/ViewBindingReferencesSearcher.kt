@@ -38,38 +38,48 @@ class ViewBindingReferencesSearcher
             return true
         }
 
-        // ── 记录所有调用，无论类型 ──────────────────────────────────────────────
         log("[VBFindUsages] ReferencesSearcher.execute() elementType=${element.javaClass.simpleName} text='${element.text?.take(80)}'")
 
-        // 入口4：LightDataBindingField —— 用户直接对 ViewBinding 字段做 Find Usages
+        // 入口4：LightDataBindingField —— 用户在 Kotlin/Java 中对 ViewBinding 字段做 Find Usages
+        //   containingClass 即为 Binding 类（如 FragmentHomeBinding），可精确过滤
         if (isLightDataBindingField(element)) {
             val fieldName = (element as? PsiNamedElement)?.name ?: run {
                 log("[VBFindUsages] ReferencesSearcher: LightDataBindingField has no name — skipping")
                 return true
             }
-            log("[VBFindUsages] ReferencesSearcher: LightDataBindingField → fieldName='$fieldName'")
-            contributeBindingFieldUsages(fieldName, params, element, consumer)
+            val bindingClass = (element as? PsiField)?.containingClass?.name ?: ""
+            log("[VBFindUsages] ReferencesSearcher: LightDataBindingField → fieldName='$fieldName' bindingClass='$bindingClass'")
+            contributeBindingFieldUsages(fieldName, params, element, consumer, expectedBindingClass = bindingClass)
             return true
         }
 
         val rawId: String
+        // expectedBindingClass：从来源 XML 文件名推导，用于过滤候选引用
+        val expectedBindingClass: String
         when {
-            // 入口1：R.id PsiField（ResourceLightField 继承自 PsiField，编辑器高亮路径）
+            // 入口1：R.id PsiField（ResourceLightField —— 编辑器高亮路径）
+            //   R.id 字段不知道来自哪个 XML，无法确定 Binding 类，跳过贡献避免误报
             element is PsiField && isRIdField(element) -> {
-                rawId = element.name
-                log("[VBFindUsages] ReferencesSearcher: R.id PsiField → rawId='$rawId' containingClass=${element.containingClass?.qualifiedName}")
+                log("[VBFindUsages] ReferencesSearcher: R.id PsiField (editor highlight) — skipping to avoid false positives")
+                return true
             }
             // 入口2：XmlAttributeValue @+id/xxx 或 @id/xxx
             element is XmlAttributeValue &&
                     (element.value.startsWith("@+id/") || element.value.startsWith("@id/")) -> {
                 rawId = IdToBindingFieldConverter.extractIdName(element.value)
-                log("[VBFindUsages] ReferencesSearcher: XmlAttributeValue → rawId='$rawId'")
+                // 从 XML 文件名推导 Binding 类名，如 fragment_home.xml → FragmentHomeBinding
+                val xmlFileName = element.containingFile?.name?.removeSuffix(".xml") ?: ""
+                expectedBindingClass = IdToBindingFieldConverter.toBindingClassName(xmlFileName)
+                log("[VBFindUsages] ReferencesSearcher: XmlAttributeValue → rawId='$rawId' expectedBindingClass='$expectedBindingClass'")
             }
             // 入口3：com.android.tools.idea.res.psi.ResourceReferencePsiElement
             isAndroidResourceReferenceElement(element) -> {
                 val name = (element as? PsiNamedElement)?.name ?: ""
                 rawId = name
-                log("[VBFindUsages] ReferencesSearcher: ResourceReferencePsiElement → rawId='$rawId'")
+                // ResourceReferencePsiElement 的 containingFile 可能指向 XML 文件
+                val xmlFileName = element.containingFile?.name?.removeSuffix(".xml") ?: ""
+                expectedBindingClass = IdToBindingFieldConverter.toBindingClassName(xmlFileName)
+                log("[VBFindUsages] ReferencesSearcher: ResourceReferencePsiElement → rawId='$rawId' expectedBindingClass='$expectedBindingClass'")
             }
             // 其他类型——静默跳过
             else -> {
@@ -85,20 +95,25 @@ class ViewBindingReferencesSearcher
             return true
         }
 
-        log("[VBFindUsages] ReferencesSearcher: rawId='$rawId' → bindingFieldName='$bindingFieldName'")
-        contributeBindingFieldUsages(bindingFieldName, params, element, consumer)
+        log("[VBFindUsages] ReferencesSearcher: rawId='$rawId' → bindingFieldName='$bindingFieldName' expectedBindingClass='$expectedBindingClass'")
+        contributeBindingFieldUsages(bindingFieldName, params, element, consumer, expectedBindingClass)
         return true
     }
 
     /**
      * 在 [params] 的搜索范围内寻找所有 [bindingFieldName] 的 ViewBinding 访问，
      * 并通过 [consumer] 贡献 [ViewBindingPseudoReference]。
+     *
+     * @param expectedBindingClass 预期的 Binding 类名（如 FragmentHomeBinding）。
+     *   非空时只贡献含有该类名的文件中的引用，避免同名 id 跨 XML 污染结果。
+     *   空字符串表示不过滤。
      */
     private fun contributeBindingFieldUsages(
         bindingFieldName: String,
         params: ReferencesSearch.SearchParameters,
         rIdElement: PsiElement,
-        consumer: Processor<in PsiReference>
+        consumer: Processor<in PsiReference>,
+        expectedBindingClass: String
     ) {
         val scope = params.effectiveSearchScope as? GlobalSearchScope
             ?: GlobalSearchScope.projectScope(rIdElement.project)
@@ -106,9 +121,20 @@ class ViewBindingReferencesSearcher
         val searchHelper = PsiSearchHelper.getInstance(rIdElement.project)
         var contributed = 0
         var skipped = 0
+        var skippedClass = 0
         searchHelper.processElementsWithWord(
             { psiElement, _ ->
                 if (psiElement.text == bindingFieldName) {
+                    // ── 按 Binding 类名过滤：仅保留含目标 Binding 类的文件 ──────────
+                    if (expectedBindingClass.isNotEmpty()) {
+                        val fileText = psiElement.containingFile?.text ?: ""
+                        if (!fileText.contains(expectedBindingClass)) {
+                            skippedClass++
+                            log("[VBFindUsages] skipped (bindingClass) #$skippedClass in '${psiElement.containingFile?.name}' — expected '$expectedBindingClass'")
+                            return@processElementsWithWord true
+                        }
+                    }
+                    // ── 按访问模式过滤 ──────────────────────────────────────────
                     if (isLikelyViewBindingAccess(psiElement)) {
                         contributed++
                         val accepted = consumer.process(ViewBindingPseudoReference(psiElement, rIdElement))
@@ -123,9 +149,9 @@ class ViewBindingReferencesSearcher
             scope,
             bindingFieldName,
             UsageSearchContext.IN_CODE,
-            true // 大小写敏感
+            true
         )
-        log("[VBFindUsages] ReferencesSearcher done: contributed=$contributed skipped=$skipped")
+        log("[VBFindUsages] ReferencesSearcher done: contributed=$contributed skipped=$skipped skippedClass=$skippedClass")
     }
 
     // ── 工具方法 ────────────────────────────────────────────────────────────
