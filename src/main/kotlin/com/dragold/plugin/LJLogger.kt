@@ -15,7 +15,7 @@ object LJLogger {
      * - true  → 输出所有 INFO 日志（调试模式）
      * - false → 静默，不输出任何日志（生产模式）
      */
-    const val ENABLED = true
+    const val ENABLED = false
 
     // ── 各类的 Logger 实例缓存 ──────────────────────────────────────────────
 
