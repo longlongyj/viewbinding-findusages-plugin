@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.dragold.plugin"
-version = "1.2.4"
+version = "1.2.5"
 
 repositories {
     // 当前环境访问 Maven Central 会在 HEAD 请求阶段被拒绝，优先使用已验证可访问的镜像
@@ -43,15 +43,27 @@ intellijPlatform {
 
         ideaVersion {
             sinceBuild = "233"   // Android Studio Iguana (2023.2) 及以上均可安装
-            // untilBuild 不设置 = 不限制未来版本，新版 AS 发布后无需更新插件即可使用
+            untilBuild = "999.*" // 不限制上限；插件 2.x 若不显式设置会自动取编译平台版本作为上限
         }}
 
     signing {
-        // 发布到 Marketplace 时配置，本地调试可忽略
+        // 签名所需的三个值从环境变量读取，不硬编码到代码里
+        // 发布前在命令行设置：
+        //   $env:PLUGIN_PRIVATE_KEY    = (Get-Content certs\private.pem -Raw)
+        //   $env:PLUGIN_CERTIFICATE    = (Get-Content certs\chain.crt -Raw)
+        //   $env:PLUGIN_KEY_PASSPHRASE = ""   # 本次生成时未设密码，留空即可
+        certificateChain = System.getenv("PLUGIN_CERTIFICATE")
+        privateKey        = System.getenv("PLUGIN_PRIVATE_KEY")
+        password          = System.getenv("PLUGIN_KEY_PASSPHRASE") ?: ""
     }
 
     publishing {
-        // 发布到 Marketplace 时配置
+        // Marketplace Token：登录 https://plugins.jetbrains.com → 头像 → My Tokens → 生成
+        // 发布前设置：$env:PLUGIN_PUBLISH_TOKEN = "perm:xxxxx"
+        token = System.getenv("PLUGIN_PUBLISH_TOKEN")
+
+        // 发布渠道：stable（正式）或 beta / eap（测试）
+        channels = listOf(System.getenv("PLUGIN_PUBLISH_CHANNEL") ?: "stable")
     }
 }
 

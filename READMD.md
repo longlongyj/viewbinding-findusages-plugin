@@ -81,7 +81,7 @@ with(binding) {
 
 ### 方法一：从本地文件安装（推荐，离线可用）
 
-1. 前往 [Releases 页面](../../releases) 下载最新版本的 `.zip` 文件
+1. 前往 [releases 目录](releases) 下载最新版本的 `.zip` 文件
    （文件名格式：`viewbinding-findusages-plugin-x.x.x.zip`）
 
 2. 打开 Android Studio，进入菜单：
@@ -91,8 +91,6 @@ with(binding) {
    > macOS 用户：`Android Studio → Settings → Plugins`
 
 3. 点击插件列表右上角的齿轮图标 ⚙️，选择 **Install Plugin from Disk...**
-
-   ![Install from disk](docs/install_from_disk.png)
 
 4. 在文件选择对话框中选中下载的 `.zip` 文件，点击 **OK**
 
@@ -123,12 +121,10 @@ with(binding) {
 
 1. 打开任意布局 XML 文件（如 `fragment_home.xml`）
 
-2. 将光标定位到某个 View 的 `android:id` 属性值上，例如：
-   ```xml
-   <TextView
-       android:id="@+id/tv_title"   ← 将光标放在这里
-       android:layout_width="wrap_content"
-       ... />
+2. 将光标定位到某个 View 的 `android:id` 属性值上，将光标放在 id 值处，例如 `"@+id/tv_title"` 的引号内：
+
+   ```
+   android:id="@+id/tv_title"
    ```
 
 3. 按快捷键 **Alt+F7**（macOS：**⌥F7**），或右键选择 **Find Usages**

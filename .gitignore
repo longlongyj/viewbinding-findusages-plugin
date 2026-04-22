@@ -3,3 +3,10 @@
 /.intellijPlatform/
 /build/
 /build/classes/kotlin/main/
+
+# 签名证书（含私钥，严禁提交到 Git）
+/certs/
+
+# releases 目录中的 zip 文件纳入 Git 版本管理（发布产物）
+!/releases/*.zip
+
