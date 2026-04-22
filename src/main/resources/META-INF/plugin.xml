@@ -1,0 +1,29 @@
+<idea-plugin>
+    <id>com.dragold.plugin.viewbinding-findusages</id>
+    <name>ViewBinding Find Usages</name>
+    <vendor email="support@dragold.com" url="https://dragold.com">Dragold</vendor>
+
+    <description><![CDATA[
+        <p>在 Android 项目中，对 XML 布局的 <code>@+id/xxx</code> 执行 Find Usages 时，
+        同时查找 <code>R.id.xxx</code> 和对应的 ViewBinding 字段（如 <code>binding.containerTipItemLayout</code>）。</p>
+        <br/>
+        <p><b>使用方式：</b>在 XML 中右键任意 <code>@+id/xxx</code> → Find Usages，结果会同时包含 R.id 引用和 ViewBinding 字段引用。</p>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+    <!-- org.jetbrains.android 在 Android Studio 中始终存在，但声明强依赖可能导致在某些版本中加载失败。
+         实际运行时 R.id PsiField 的识别不依赖该插件的 API，故改为可选依赖。 -->
+    <depends optional="true" config-file="viewbinding-android.xml">org.jetbrains.android</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- 备用入口：在非 Android Studio 环境或直接对 R.id 字段触发 Find Usages 时生效 -->
+        <findUsagesHandlerFactory
+                order="first"
+                implementation="com.dragold.plugin.ViewBindingFindUsagesHandlerFactory"/>
+
+        <!-- 主入口：挂载到 ReferencesSearch，当 Android 插件搜索 R.id.xxx 引用时，
+             同时贡献 binding.tvTitle 等 ViewBinding 字段访问，使其出现在 Find Usages 结果里 -->
+        <referencesSearch implementation="com.dragold.plugin.ViewBindingReferencesSearcher"/>
+    </extensions>
+</idea-plugin>

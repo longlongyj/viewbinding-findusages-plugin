@@ -1,0 +1,5 @@
+<idea-plugin>
+    <!-- Android 插件存在时不需要额外注册任何扩展，
+         此文件仅作为 optional depends 的占位配置。 -->
+</idea-plugin>
+
