@@ -4,10 +4,12 @@
     <vendor email="support@dragold.com" url="https://dragold.com">Dragold</vendor>
 
     <description><![CDATA[
-        <p>在 Android 项目中，对 XML 布局的 <code>@+id/xxx</code> 执行 Find Usages 时，
-        同时查找 <code>R.id.xxx</code> 和对应的 ViewBinding 字段（如 <code>binding.containerTipItemLayout</code>）。</p>
-        <br/>
-        <p><b>使用方式：</b>在 XML 中右键任意 <code>@+id/xxx</code> → Find Usages，结果会同时包含 R.id 引用和 ViewBinding 字段引用。</p>
+        <p>Enhances <b>Find Usages</b> for Android ViewBinding in IntelliJ IDEA / Android Studio.</p>
+        <p>When you run <b>Find Usages</b> on an <code>@+id/xxx</code> attribute in an XML layout file,
+        the results will include both <code>R.id.xxx</code> references <em>and</em> the corresponding
+        ViewBinding field accesses (e.g. <code>binding.containerTipItemLayout</code>).</p>
+        <p><b>Usage:</b> right-click any <code>@+id/xxx</code> in XML &rarr; Find Usages.
+        Results will contain R.id references and ViewBinding field usages at the same time.</p>
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>

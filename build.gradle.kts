@@ -43,7 +43,7 @@ intellijPlatform {
 
         ideaVersion {
             sinceBuild = "233"   // Android Studio Iguana (2023.2) 及以上均可安装
-            untilBuild = "999.*" // 不限制上限；插件 2.x 若不显式设置会自动取编译平台版本作为上限
+            untilBuild = provider { null } // 不限制上限，兼容所有未来版本
         }}
 
     signing {
