@@ -21,6 +21,21 @@ class ViewBindingPseudoReference(
     override fun getVariants(): Array<Any> = emptyArray()
 
     /**
+     * Rename 时不做任何 PSI 修改。
+     *
+     * ViewBinding 字段（binding.tvTitle）由 Android 构建系统根据 XML id 自动生成，
+     * 无需也不应该在 Rename 重构时手动修改它们（会在下次构建后自动更新）。
+     *
+     * 若不重写，父类默认实现会通过 ElementManipulator 修改 PSI，
+     * 触发 PSI 变更事件 → ProcessesModel 通知 → AppInspectionView.updateUi()
+     * 在 AWT 事件分发期间操作 UI 组件树，导致 IndexOutOfBoundsException。
+     */
+    override fun handleElementRename(newElementName: String): PsiElement {
+        log("handleElementRename: no-op for ViewBinding pseudo reference, newName='$newElementName'")
+        return element
+    }
+
+    /**
      * 检查本引用是否指向 [element]。
      * 加入了详细诊断日志，并扩展了多层 fallback 以应对 Android Studio 虚拟 R 字段。
      */
