@@ -1,3 +1,6 @@
+# 运行命令：.\pack.ps1
+# 功能：仅打包 + 签名，生成 *-signed.zip 到 releases\，需手动上传到 Marketplace
+# 手动上传地址：https://plugins.jetbrains.com/plugin/add
 $ErrorActionPreference = 'Stop'
 
 $certDir = Join-Path $PSScriptRoot 'certs'

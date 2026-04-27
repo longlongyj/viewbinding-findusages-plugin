@@ -1,4 +1,7 @@
-﻿param([string]$Channel = 'stable')
+﻿# 运行命令：.\publish.ps1
+# 功能：打包 + 签名 + 自动上传到 JetBrains Marketplace（需先手动上传过一次）
+# 可选参数：.\publish.ps1 -Channel beta   （默认 stable）
+param([string]$Channel = 'stable')
 $ErrorActionPreference = 'Stop'
 
 $certDir = Join-Path $PSScriptRoot 'certs'

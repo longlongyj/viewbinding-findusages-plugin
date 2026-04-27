@@ -1,5 +1,13 @@
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
+// ┌─────────────────────────────────────────────────────────────────┐
+// │  常用命令（在项目根目录执行）                                        │
+// │  打包（不签名）：  .\gradlew.bat buildPlugin                      │
+// │  打包 + 签名：    .\pack.ps1                                     │
+// │  打包 + 上传：    .\publish.ps1           （默认 stable 渠道）     │
+// │                  .\publish.ps1 -Channel beta  （beta 渠道）      │
+// └─────────────────────────────────────────────────────────────────┘
+
 plugins {
     id("org.jetbrains.intellij.platform") version "2.1.0"
     kotlin("jvm") version "2.1.21"

@@ -1,8 +1,10 @@
-# Project exclude paths
+# IDE 配置（含个人本地状态、Copilot 状态等，不提交）
+/.idea/
+
+# Gradle 缓存与构建产物
 /.gradle/
 /.intellijPlatform/
 /build/
-/build/classes/kotlin/main/
 
 # 签名证书（含私钥，严禁提交到 Git）
 /certs/
