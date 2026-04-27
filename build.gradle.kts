@@ -14,7 +14,7 @@ plugins {
 }
 
 group = "com.dragold.plugin"
-version = "1.2.5"
+version = "1.2.6"
 
 repositories {
     // 当前环境访问 Maven Central 会在 HEAD 请求阶段被拒绝，优先使用已验证可访问的镜像
