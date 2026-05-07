@@ -98,9 +98,8 @@ with(binding) {
 
 ### 方法二：从 JetBrains Marketplace 安装（即将上线）
 
-> ⏳ 还未上线，敬请期待，上线后即可通过 Marketplace 直接搜索安装。
+[//]: # (> ⏳ 还未上线，敬请期待，上线后即可通过 Marketplace 直接搜索安装。)
 
-<!--
 1. 打开 Android Studio，进入菜单：
    ```
    File → Settings → Plugins → Marketplace
@@ -109,7 +108,6 @@ with(binding) {
 2. 搜索 `ViewBinding Find Usages`
 
 3. 点击 **Install**，重启 IDE
--->
 
 ### 验证安装
 
