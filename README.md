@@ -8,11 +8,12 @@
 
 1. [背景与痛点](#背景与痛点)
 2. [插件功能](#插件功能)
-3. [安装教程](#安装教程)
-4. [使用教程](#使用教程)
-5. [支持的使用场景](#支持的使用场景)
-6. [兼容性](#兼容性)
-7. [常见问题](#常见问题)
+3. [@JvmStatic 跳转修复](#jvmstatic-跳转修复)
+4. [安装教程](#安装教程)
+5. [使用教程](#使用教程)
+6. [支持的使用场景](#支持的使用场景)
+7. [兼容性](#兼容性)
+8. [常见问题](#常见问题)
 
 ---
 
@@ -74,6 +75,65 @@ with(binding) {
     tvTitle.text = "Hello"
 }
 ```
+
+---
+
+## @JvmStatic 跳转修复
+
+### 问题描述
+
+在 Android 项目中，Kotlin 工具类常将方法放在 `companion object` 并标注 `@JvmStatic`，
+以便 Java 代码像调用静态方法一样使用：
+
+```java
+// Java 代码
+String result = FooUtils.bar();
+```
+
+```kotlin
+// Kotlin 源码
+class FooUtils {
+    companion object {
+        @JvmStatic
+        fun bar(): String { ... }
+    }
+}
+```
+
+此时在 Java 文件中按 **Ctrl+左键**（Go to Declaration）点击 `bar`，
+Android Studio 会跳转到反编译的 `.class` 视图，而不是 Kotlin 源码 `.kt` 文件。
+
+### 根本原因
+
+Kotlin 编译器为 `@JvmStatic` 方法生成了两个 JVM 方法：
+- **Companion 内部类**中含实际实现的实例方法
+- **外部类**中委托给 `Companion.INSTANCE.method()` 的静态桥接方法
+
+Java 调用的是静态桥接方法，IntelliJ 将引用解析到这个桥接方法，
+而桥接方法没有对应源码，导致跳转到反编译视图。
+
+### 本插件的修复
+
+插件注册了一个 `GotoDeclarationHandler`，在以下全部条件满足时自动介入：
+
+1. 当前文件是 **Java 文件**
+2. 光标下解析到的方法是**静态方法**
+3. 该方法的 `navigationElement` 尚未指向 `.kt` / `.java` 源码
+4. 外部类携带 `@kotlin.Metadata`（确认是 Kotlin 编译产物）
+5. 外部类有名为 `Companion` 的内部类
+6. `Companion` 中存在**同名、同参数数量**且带 `@JvmStatic` 注解的方法
+7. 该方法的 `navigationElement` 确实指向 `.kt` 文件
+
+满足以上条件时，将跳转目标重定向到 Companion 内方法的 `navigationElement`（即 `.kt` 源码位置）。  
+任一条件不满足则完全不干预，交由平台默认逻辑处理。
+
+### 不处理的场景
+
+| 写法 | 原因 |
+|------|------|
+| `FooUtils.Companion.bar()` | 解析到 Companion 实例方法（非 static），条件 2 不满足，平台已可正确跳转 |
+| `navigationElement` 已指向源码 | 条件 3 不满足，平台自身已正确处理 |
+| 纯 Java 类的静态方法 | 条件 4 不满足（无 `@kotlin.Metadata`），不干预 |
 
 ---
 

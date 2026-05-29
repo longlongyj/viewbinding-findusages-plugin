@@ -151,8 +151,6 @@ class JvmStaticGotoDeclarationHandler : GotoDeclarationHandler {
     }
 
     companion object {
-        // 使用 warn 级别，不受 LJLogger.ENABLED 开关影响，方便诊断问题
-        // 确认问题已修复后，可将 warn 改回 info 并由 ENABLED 开关统一控制
         private fun log(msg: String) =
             LJLogger.debug(JvmStaticGotoDeclarationHandler::class.java, "[JvmStatic] $msg")
     }
