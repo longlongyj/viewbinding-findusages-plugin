@@ -27,5 +27,10 @@
         <!-- 主入口：挂载到 ReferencesSearch，当 Android 插件搜索 R.id.xxx 引用时，
              同时贡献 binding.tvTitle 等 ViewBinding 字段访问，使其出现在 Find Usages 结果里 -->
         <referencesSearch implementation="com.dragold.plugin.ViewBindingReferencesSearcher"/>
+
+        <!-- 修复 Java 调用 Kotlin companion object @JvmStatic 方法时
+             Ctrl+左键 / Go to Declaration 跳转到 .class 而非 .kt 源码的问题 -->
+        <gotoDeclarationHandler
+                implementation="com.dragold.plugin.JvmStaticGotoDeclarationHandler"/>
     </extensions>
 </idea-plugin>
